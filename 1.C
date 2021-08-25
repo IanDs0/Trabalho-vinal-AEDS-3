@@ -4,6 +4,7 @@
 typedef struct Dados{
 
     int num;
+    int peso;
 
 }dados;
 
@@ -20,20 +21,11 @@ typedef bloco*caixa;
 //Inicia as caixas como NULL
 caixa incializa();
 
-//Cria a Matriz de adjacência e Adciona os valores
-dados **Matriz(int tam);
-
-//Printa a Matriz de adjacência
-int *PrintMatriz(dados**matriz,int tam);
-
-//Libera a Matriz de adjacência
-void LiberaMatriz(int**matriz,int tam);
-
 //ADD o ligação do vértice
 caixa ADD(caixa lista,caixa dado);
 
 //faz as perguntas para ADD ligação do vértice
-void Lista(caixa lista[],int tam);
+void Lista(caixa lista[],int ligamento);
 
 //Coordena e deixa organizado os print
 void CoordenaPrint(caixa lista[],int tam);
@@ -50,41 +42,64 @@ void CoordenaProfundidade(caixa lista[],int tam,int inicio,int*visita);
 //Faz a Busca por Profundidade
 void Profundidade(caixa lista[],int tam,int inicio,int*visita,int cont);
 
+void Prim(caixa gr[],int tam, int orig, int *pai);
+
 /*
 Tamanho: 3
 Test: 0 3 0 1 1 1 1 0 0 0 1 1 1 1
 Tamanho: 5
 Teste: 0 5 0 1 1 0 0 1 0 1 1 1 1 0 0 1 0 1 0 1 0 1 1 1 1 0 1 0 1 0 1 1 0 1 1 0
+
+tamanho = 5 | ligamentos = 20: 
+1 2 6
+2 1 6
+1 3 1
+3 1 1
+1 4 5
+4 1 5
+2 3 2
+3 2 2
+2 5 5
+5 2 5
+3 5 6
+5 3 6
+3 4 2
+4 3 2
+3 6 4
+6 3 4
+4 6 4
+6 4 4
+5 6 3
+6 5 3
+
+6 20 1 2 6 2 1 6 1 3 1 3 1 1 1 4 5 4 1 5 2 3 2 3 2 2 2 5 5 5 2 5 3 5 6 5 3 6 3 4 2 4 3 2 3 6 4 6 3 4 4 6 4 6 4 4 5 6 3 6 5 3
+
 */
 
 int main(){
     
-    int tam,op;
-    dados**matriz;
-
-    printf("Digite o tamanho da Matriz de adjacência\n");
-    scanf("%d",&tam);
-    
-    matriz=Matriz(tam);
-    PrintMatriz(matriz,tam);
+    int tam,op,ligamentos;
     
     printf("Digite o tamanho da Lista de adjacência\n");
     scanf("%d",&tam);
+
+    printf("Digite o numero de ligamentos\n");
+    scanf("%d",&ligamentos);
     
     caixa*lista=(caixa*)malloc(tam*sizeof(caixa));
     for(int i=0;i<tam;i++)
         lista[i]=incializa();
     
-    Lista(lista,tam);
+    Lista(lista,ligamentos);
         
     CoordenaPrint(lista,tam);
     
     do{
         
-        printf("\n1)Algoritmo de busca em largura\n2)Algoritmode busca emprofundidade\n0)Para sair\n");
+        printf("\n1)Algoritmo de busca em largura\n2)Algoritmode busca emprofundidade\n3)Árvore geradora mínima com Prim\n0)Para sair\n");
         scanf("%d",&op);
     
-    }while(op!=1&&op!=2&&op!=0);
+    }while(op!=1&&op!=2&&op!=0&&op!=3);
     
     int*visita=(int*)malloc(tam*sizeof(int));
     switch(op){
@@ -98,7 +113,14 @@ int main(){
         printf("\nVisita por Profundidade [");
         CoordenaProfundidade(lista,tam,0,visita);
         break;
-        
+
+        case 3:
+        printf("\nPrim [");
+        Prim(lista,tam,0,visita);
+        for (int i=0;i<tam;i++)
+            printf("%d  ",visita[i]);
+        break;
+
         default:
         break;
     }
@@ -108,66 +130,6 @@ int main(){
 //Inicia as caixas como NULL
 caixa incializa(){
     return NULL;
-}
-
-//Cria a Matriz de adjacência e Adciona os valores
-dados **Matriz(int tam){
-    int op;
-    
-    //criar a MATRIZ
-    dados**matriz=(dados**)malloc(tam*sizeof(dados*));
-    
-    for(int i=0;i<tam;i++)
-        matriz[i]=(dados*)malloc(tam*sizeof(dados));
-    
-    //Inicializar a MATRIZ
-    for(int i=0;i<tam;i++)
-        for(int j=0;j<tam;j++)
-            matriz[i][j].num=0;
-    
-    //Colocar os valores na MATRIZ
-    for(int i=0;i<tam;i++){
-        for(int j=0; j<tam; j++){
-            do{
-                printf("O vértice [%d] possui ligaçãocom o vértice [%d]\n", i+1,j+1);
-                printf("1)Sim\n0)Não\n");
-                scanf("%d",&op);
-            }while(op!=1&&op!=0);
-            if(op==1)matriz[i][j].num=1;
-        }
-    }
-    return matriz;
-}
-
-//Printa a Matriz de adjacência
-int *PrintMatriz(dados**matriz,int tam){
-    
-    //pritar os numeros das coluna
-    for(int i=0; i<tam;i++)
-        printf("\t%d",i+1);
-    
-    printf("\n");
-    
-    for(int i=0;i<tam;i++){
-        //printar os numeros das linhas
-        printf("\n%d",i+1);
-        
-        for(int j=0;j<tam;j++){
-            printf("\t%d",matriz[i][j].num);
-        }
-
-        printf("\n");
-    }
-    return 0;
-}
-
-//Libera a Matriz de adjacência
-void LiberaMatriz(int**matriz,int tam){
-    
-    for(int i=0; i<tam;i++)
-        free(matriz[i]);
-    
-    free(matriz);
 }
 
 //ADD o ligação do vértice
@@ -182,41 +144,25 @@ caixa ADD(caixa lista,caixa dado){
 }
 
 //faz as perguntas para ADD ligação do vértice
-void Lista(caixa lista[],int tam){
+void Lista(caixa lista[],int ligamentos){
     
-    int op,j;
+    int j,i,p;
     
     //criar a LISTA
-    for(int i=0; i<tam; i++){
-        j=0;
-        do{
-            do{
+    for(int k=0; k<ligamentos; k++){
+
+        printf("ligamentos -> ");
+        scanf("%d",&i);i-=1;
+        scanf("%d",&j);j-=1;
+        scanf("%d",&p);p-=1;
             
-                printf("\nO vértice [%d] possui ligaçãocom o vértice [%d]\n", i+1,j+1);
-                printf("1)Sim\n0)Não\n");scanf("%d",&op);
-            
-            }while(op!=1&&op!=0);
-            if(op==1){
-                
-                //coloca os valores iniciais ddo blococomo tendo coisa para a lista
-                caixa l=(caixa)malloc(sizeof(caixa));
-                l->A1.num=j;
-                l->Ligamento=NULL;lista[i]=ADD(lista[i],l);
-            }
-            if(j<tam-1){
-                
-                do{
-                
-                    printf("\nPossui mais algum valorque se liga ao vértice[%d]\n",i+1);
-                    printf("1)Sim\n0)Não\n");
-                    scanf("%d",&op);
-                
-                }while(op!=1&&op!=0);
-            }else
-                op=0;
-            j++;
-        
-        }while(op!=0);
+        //coloca os valores iniciais ddo blococomo tendo coisa para a lista
+        caixa l=(caixa)malloc(sizeof(caixa));
+        l->A1.num=j;
+        l->A1.peso=p;
+        l->Ligamento=NULL;
+        lista[i]=ADD(lista[i],l);
+
     }
 }
 
@@ -307,3 +253,52 @@ void Profundidade(caixa lista[],int tam,int inicio,int*visita,int cont){
         aux=aux->Ligamento;
     }
 }
+
+void Prim(caixa lista[],int tam, int inicio, int *visita){
+
+    int i,dest,pri,menor;
+
+    for(i=0; i<tam; i++)
+        visita[i]=-1;
+
+    visita[inicio] = inicio;
+
+    caixa aux =(caixa)malloc(1*sizeof(caixa));
+    caixa aux2 =(caixa)malloc(1*sizeof(caixa));
+
+    while (1){
+    
+        pri = 1;
+        for ( i = 0; i < tam; i++){
+
+            aux=lista[i];
+            if (visita[i]!= -1){
+
+                aux2=aux;
+                while(aux2!=NULL){
+                    
+                    if (visita[aux2->A1.num] == -1)
+                        if (pri){
+                            menor = aux2->A1.peso;
+                            inicio = i;
+                            dest = aux2->A1.num;
+                            pri = 0;
+                        }else
+                            if (menor > aux2->A1.peso)
+                            {
+                                menor = aux2->A1.peso;
+                                inicio = i;
+                                dest = aux2->A1.num;
+                            }
+
+                    aux2=aux2->Ligamento;                   
+                }   
+            }
+        }
+        if(pri == 1)
+            break;
+
+        visita[dest] = inicio;
+    }
+}
+

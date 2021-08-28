@@ -1,5 +1,14 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<string.h>
+
+typedef struct Amostras{
+
+    int A;
+    int B;
+    int Peso;
+
+}ligandolista;
 
 typedef struct Dados{
 
@@ -25,7 +34,7 @@ caixa incializa();
 caixa ADD(caixa lista,caixa dado);
 
 //faz as perguntas para ADD ligação do vértice
-void Lista(caixa lista[],int ligamento);
+void Lista(caixa lista[],int ligamentos,ligandolista *LL);
 
 //Coordena e deixa organizado os print
 void CoordenaPrint(caixa lista[],int tam);
@@ -49,8 +58,9 @@ void Kruskal(caixa lista[],int tam, int inicio, int *visita);
 
 
 
-void insereA( caixa lista[], int v, int num, int topo[]);
+void Topologica (caixa a[], int tam, int* visita);
 
+void Temp (caixa lista[],int tam,int inicio,int*visita);
 /*
 Tamanho: 3
 Test: 0 3 0 1 1 1 1 0 0 0 1 1 1 1
@@ -87,27 +97,91 @@ int main(){
     
     int tam,op,ligamentos;
 
-    int i,j,v,w;
-    
+    int i,j=0;
+
+    char iii[100];
 
     
-    printf("Digite o tamanho da Lista de adjacência\n");
-    scanf("%d",&tam);
+    /////////////////////////////////////////////////////////
 
-    printf("Digite o numero de ligamentos\n");
-    scanf("%d",&ligamentos);
+    //printf("Digite o tamanho da Lista de adjacência\n");
+    //scanf("%d",&tam);
+
+    //printf("Digite o numero de ligamentos\n");
+    //scanf("%d",&ligamentos);
+
+    ////////////////////////////////////////////////////////
+
+    FILE *oi;
+
+    oi = fopen("./Instâncias/DMXA/dmxa0628.stp","r");
+
+    //TAMANHO
+    while(fscanf(oi,"%s",iii)!=-1){
+
+        
+        if (strcmp(iii,"Nodes")==0)
+        {            
+            fscanf(oi,"%d",&tam);
+            
+        }
+        
+        if (strcmp(iii,"Edges")==0)
+        {
+
+            fscanf(oi,"%d",&ligamentos);
+            
+        }
+    
+    }
+
+    fclose(oi);
     
     caixa*lista=(caixa*)malloc(tam*sizeof(caixa));
     for(int i=0;i<tam;i++)
         lista[i]=incializa();
+
+    ligandolista*LL=(ligandolista*)malloc(ligamentos*sizeof(ligandolista));
+
+    ///////////////////////////////////////////////////////
+
+    oi = fopen("./Instâncias/DMXA/dmxa0628.stp","r");
+    int auxA, auxP;
+    i=0;
+    while(fscanf(oi,"%s",iii)!=-1){
+
+        if (strcmp(iii,"E")==0)
+        {
+            
+            fscanf(oi,"%d %d",&LL[i].A,&LL[i].B);
+
+            i++;
+        }
+
+        if (strcmp(iii,"DD")==0)
+        {
+            
+            fscanf(oi,"%d %d",&auxA,&auxP);
+
+            for(j = 0; j < ligamentos; j++)
+                if (LL[j].A==auxA)
+                {
+                    LL[j].Peso=auxP;
+                }
+
+        }
+
+    }
+
+    fclose(oi);
     
-    Lista(lista,ligamentos);
+    Lista(lista,ligamentos,LL);
         
     CoordenaPrint(lista,tam);
     
     do{
         
-        printf("\n1)Algoritmo de busca em largura\n2)Algoritmode busca emprofundidade\n3)Árvore geradora mínima com Prim\n4)Árvore geradora mínima com Kruskalf\n0)Para sair\n");
+        printf("\n1)Algoritmo de busca em largura\n2)Algoritmode busca emprofundidade\n3)Árvore geradora mínima com Prim\n4)Árvore geradora mínima com Kruskalf\n5)Ordenação topológica\n0)Para sair\n\n");
         scanf("%d",&op);
     
     }while(op!=1 && op!=2 && op!=0 && op!=3 && op!=4 && op!=5);
@@ -115,9 +189,6 @@ int main(){
     caixa*G=(caixa*)malloc(tam*sizeof(caixa));
     for(int i=0;i<tam;i++)
         G[i]=incializa();
-    Lista(lista,ligamentos);
-
-    int*aux =(int*)malloc(tam*sizeof(int));
 
     int*visita=(int*)malloc(tam*sizeof(int));
     int*visita2=(int*)malloc(tam*sizeof(int));
@@ -150,29 +221,8 @@ int main(){
         case 5:
 
         //CoordenaProfundidade(lista,tam,0,visita);
-
-        printf("\n");
-        for (i = 0; i < tam+1; i++) {
-            
-            printf("%d  ",visita[i]);
-
-        }
-        printf("\n");
-
-        for (i = 0; i < tam; i++) {
-            for (j = 0; j < ligamentos; j++) {
-                visita[j] = 0;
-            }
-            printf("\n\noioi");
-            CoordenaProfundidade(G, tam, visita[i],visita2);
-            
-        }
-
-        for (i = 0; i < tam+1; i++) {
-            
-            printf("%d  ",visita2[i]);
-
-        }
+            //printf("\n\noi\n\n");
+            Topologica(lista,tam,visita);
        
         break;
 
@@ -199,17 +249,17 @@ caixa ADD(caixa lista,caixa dado){
 }
 
 //faz as perguntas para ADD ligação do vértice
-void Lista(caixa lista[],int ligamentos){
+void Lista(caixa lista[],int ligamentos,ligandolista *LL){
     
     int j,i,p;
     
     //criar a LISTA
     for(int k=0; k<ligamentos; k++){
 
-        printf("ligamentos -> ");
-        scanf("%d",&i);i-=1;
-        scanf("%d",&j);j-=1;
-        scanf("%d",&p);p-=1;
+        
+        i=LL[k].A;i-=1;
+        j=LL[k].B;j-=1;
+        p=LL[k].Peso;p-=1;
             
         //coloca os valores iniciais ddo blococomo tendo coisa para a lista
         caixa l=(caixa)malloc(sizeof(caixa));
@@ -307,9 +357,9 @@ void Profundidade(caixa lista[],int tam,int inicio,int*visita,int cont){
     aux=lista[inicio];
 
     while(aux!=NULL){
-        cont++;
+        //cont++;
         if(!visita[aux->A1.num])
-            Profundidade(lista,tam,aux->A1.num,visita,cont);
+            Profundidade(lista,tam,aux->A1.num,visita,cont+1);
         aux=aux->Ligamento;
     }
 }
@@ -418,48 +468,55 @@ void Kruskal(caixa lista[],int tam, int inicio, int *visita){
     }while (pri != 1);
 }
 
-void insereA( caixa lista[], int v, int num, int topo[]){
+void Temp (caixa lista[],int tam,int inicio,int*visita){
+    
+    visita[inicio]=1;
+    
+    
+    caixa aux=(caixa)malloc(sizeof(caixa));
+    aux=lista[inicio];
 
-    caixa aux, ant;
-    aux = lista[v];
-    ant = NULL;
-    while( aux && aux->A1.num <= num ){
-        if( aux->A1.num == num) {
-            printf("Tarefas (%d, %d) ja inseridas !\n", v, num);
-            return;
+    for(int i=0; i<tam; i++){
+        while(aux!=NULL){
+            if(!visita)
+                Temp(lista,tam,aux->A1.num,visita);
+            aux=aux->Ligamento;
         }
-        ant = aux;
-        aux = aux->Ligamento;
     }
-    caixa novo = (caixa)calloc(1, sizeof(caixa));
-    novo->A1.num = num;
-    novo->Ligamento = aux;
-    if( ant == NULL)
-        lista[v] = novo;
-    else
-        ant->Ligamento = novo;
+    printf("%d ",inicio+1);
+}
 
-    topo[num]++;
+void Topologica (caixa lista[], int tam, int *visita){
+    for (int i = 0; i < tam; i++){
+        visita[i] = 0;
+    }
+    for (int i = 0; i < tam; i++){
+        Temp (lista,tam,i,visita);
+    }
 }
 
 /*
-1 2 1
-1 3 1
-1 4 1
-1 6 1
-2 3 1
-3 4 1
-3 5 1
-6 5 1
-6 7 1
-5 7 1
-7 8 1
-7 9 1
-8 9 1
-10 7 1
+#include <stdio.h>
+#include <stdlib.h>
+#include <dirent.h>
 
-10 14 1 2 1 1 3 1 1 4 1 1 6 1 2 3 1 3 4 1 3 5 1 6 5 1 6 7 1 5 7 1 7 8 1 7 9 1 8 9 1 10 7 1
+int main(void)
+{
 
-2 1 3 1 4 1 6 1 3 2 4 3 5 3 5 6 7 6 7 5 8 7 9 7 9 8 7 10
+    DIR *dir;
+    struct dirent *lsdir;
 
+    dir = opendir("./Instâncias/DMXA");
+
+    // print all the files and directories within directory
+    while ( ( lsdir = readdir(dir) ) != NULL )
+    {
+        printf ("----%s---\n", lsdir->d_name);
+    }
+
+    closedir(dir);
+
+    return 0;
+
+}
 */

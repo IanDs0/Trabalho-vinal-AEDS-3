@@ -60,7 +60,16 @@ void Kruskal(caixa lista[],int tam, int inicio, int *visita);
 
 void Topologica (caixa a[], int tam, int* visita);
 
-void Temp (caixa lista[],int tam,int inicio,int*visita);
+void Cor (caixa lista[],int tam,int inicio,int*visita);
+
+
+void GLista(caixa lista[],int ligamentos,ligandolista *LL);
+
+void FortLigado(caixa lista[],int tam,int*visita,int*visita2);
+
+void For(caixa lista[],int tam,int inicio,int*visita,int cont);
+
+
 /*
 Tamanho: 3
 Test: 0 3 0 1 1 1 1 0 0 0 1 1 1 1
@@ -95,141 +104,128 @@ tamanho = 6 | ligamentos = 20:
 
 int main(){
     
-    int tam,op,ligamentos;
-
-    int i,j=0;
+    int tam,ligamentos,i,j=0;
 
     char iii[100];
 
-    
-    /////////////////////////////////////////////////////////
-
-    //printf("Digite o tamanho da Lista de adjacência\n");
-    //scanf("%d",&tam);
-
-    //printf("Digite o numero de ligamentos\n");
-    //scanf("%d",&ligamentos);
-
-    ////////////////////////////////////////////////////////
-
     FILE *oi;
 
-    oi = fopen("./Instâncias/DMXA/dmxa0628.stp","r");
+    //Coleta Tamanho e NLigamentos do Grafo
+    {
+        oi = fopen("./Instâncias/DMXA/DEUS.txt","r");
 
-    //TAMANHO
-    while(fscanf(oi,"%s",iii)!=-1){
+        //TAMANHO
+        while(fscanf(oi,"%s",iii)!=-1){
 
-        
-        if (strcmp(iii,"Nodes")==0)
-        {            
-            fscanf(oi,"%d",&tam);
+            if (strcmp(iii,"Nodes")==0)          
+                fscanf(oi,"%d",&tam);
             
+            if (strcmp(iii,"Edges")==0)
+                fscanf(oi,"%d",&ligamentos);
+        
         }
-        
-        if (strcmp(iii,"Edges")==0)
-        {
 
-            fscanf(oi,"%d",&ligamentos);
-            
+        fclose(oi);
+        
+    }  
+
+        caixa*lista=(caixa*)malloc(tam*sizeof(caixa));
+        caixa*Gt=(caixa*)malloc(tam*sizeof(caixa));
+        for(int i=0;i<tam;i++){
+            lista[i]=incializa();
+            Gt[i]=incializa();
+        }
+
+        ligandolista*LL=(ligandolista*)malloc(ligamentos*sizeof(ligandolista));
+
+        for ( i = 0; i < ligamentos; i++)
+            LL->Peso=1;  
+
+    //Lista
+    {
+        oi = fopen("./Instâncias/DMXA/DEUS.txt","r");
+        int auxA, auxP;
+        i=0;
+        while(fscanf(oi,"%s",iii)!=-1){
+
+            if (strcmp(iii,"E")==0)
+            {
+                
+                fscanf(oi,"%d %d",&LL[i].A,&LL[i].B);
+
+                i++;
+            }
+
+            if (strcmp(iii,"DD")==0)
+            {
+                
+                fscanf(oi,"%d %d",&auxA,&auxP);
+
+                for(j = 0; j < ligamentos; j++)
+                    if (LL[j].A==auxA)
+                    {
+                        LL[j].Peso=auxP;
+                    }
+
+            }
+
         }
     
+        fclose(oi);
+    
+        Lista(lista,ligamentos,LL);
+        
+        CoordenaPrint(lista,tam);
+
     }
 
-    fclose(oi);
-    
-    caixa*lista=(caixa*)malloc(tam*sizeof(caixa));
-    for(int i=0;i<tam;i++)
-        lista[i]=incializa();
+    //Antlista
+    {
 
-    ligandolista*LL=(ligandolista*)malloc(ligamentos*sizeof(ligandolista));
-
-    ///////////////////////////////////////////////////////
-
-    oi = fopen("./Instâncias/DMXA/dmxa0628.stp","r");
-    int auxA, auxP;
-    i=0;
-    while(fscanf(oi,"%s",iii)!=-1){
-
-        if (strcmp(iii,"E")==0)
-        {
-            
-            fscanf(oi,"%d %d",&LL[i].A,&LL[i].B);
-
-            i++;
-        }
-
-        if (strcmp(iii,"DD")==0)
-        {
-            
-            fscanf(oi,"%d %d",&auxA,&auxP);
-
-            for(j = 0; j < ligamentos; j++)
-                if (LL[j].A==auxA)
-                {
-                    LL[j].Peso=auxP;
-                }
-
-        }
-
+        GLista(Gt,ligamentos,LL);
     }
-
-    fclose(oi);
-    
-    Lista(lista,ligamentos,LL);
-        
-    CoordenaPrint(lista,tam);
-    
-    do{
-        
-        printf("\n1)Algoritmo de busca em largura\n2)Algoritmode busca emprofundidade\n3)Árvore geradora mínima com Prim\n4)Árvore geradora mínima com Kruskalf\n5)Ordenação topológica\n0)Para sair\n\n");
-        scanf("%d",&op);
-    
-    }while(op!=1 && op!=2 && op!=0 && op!=3 && op!=4 && op!=5);
-    
-    caixa*G=(caixa*)malloc(tam*sizeof(caixa));
-    for(int i=0;i<tam;i++)
-        G[i]=incializa();
 
     int*visita=(int*)malloc(tam*sizeof(int));
     int*visita2=(int*)malloc(tam*sizeof(int));
-    switch(op){
-        
-        case 1:
-            printf("\nVisita por largura [ ");
-            Largura(lista,tam,0,visita);
-        break;
-        
-        case 2:
-            printf("\nVisita por Profundidade [ ");
-            CoordenaProfundidade(lista,tam,0,visita);
-        break;
 
-        case 3:
-            printf("\nPrim [ ");
-            Prim(lista,tam,0,visita);
-            for (int i=0;i<tam;i++)
-                printf("%d  ",visita[i]);
-        break;
+    //Funções
+    {
+        printf("\n\nTopologica");
+        Topologica(lista,tam,visita); 
 
-        case 4:
-            printf("\nKruskal [ ");
-            Kruskal(lista,tam,0,visita);
-            for (int i=0;i<tam;i++)
-                printf("%d  ",visita[i]);
-        break;
+        /////////////////////////////////////////
 
-        case 5:
+        printf("\n\nKruskal");
+        Kruskal(lista,tam,0,visita);
+        for (int i=0;i<tam;i++)
+            printf("%d  ",visita[i]);
 
-        //CoordenaProfundidade(lista,tam,0,visita);
-            //printf("\n\noi\n\n");
-            Topologica(lista,tam,visita);
-       
-        break;
+        /////////////////////////////////////////
 
-        default:
-        break;
+        printf("\n\nPrim");
+        Prim(lista,tam,0,visita);
+        for (int i=0;i<tam;i++)
+            printf("%d  ",visita[i]);
+
+        /////////////////////////////////////////
+
+        printf("\n\nVisita por largura");
+        Largura(lista,tam,0,visita);
+
+        /////////////////////////////////////////
+
+        printf("\n\nVisita por Profundidade");
+        CoordenaProfundidade(lista,tam,0,visita);
+        printf("\n");  
+
+        /////////////////////////////////////////  
+
+        printf("\n\nFortemente Conectado\n");
+        FortLigado(Gt,tam,visita,visita2);
+    
     }
-    printf("]\n");
+
+
     return 0;
 }
 //Inicia as caixas como NULL
@@ -313,7 +309,7 @@ void Largura(caixa lista[],int tam,int inicio,int*visita){
     while(inifila!=fimfila){
         
         inifila=(inifila+1)%tam;vet=fil[inifila];
-        cont++;printf("%d",vet+1);
+        cont++;printf("%d ",vet+1);
         aux=lista[vet];
         
         while(aux!=NULL){
@@ -338,12 +334,12 @@ void CoordenaProfundidade(caixa lista[],int tam,int inicio,int*visita){
     for(int i=0; i<tam; i++)
         visita[i]=0;
     Profundidade(lista,tam,inicio,visita,cont);
-    /*
+/*    
     printf("\n\n Visitas\n");
     for(int i=0; i<tam; i++)
         printf("%d  ",visita[i]);
     printf("\n\n");
-    */
+*/    
     
 }
 
@@ -468,7 +464,7 @@ void Kruskal(caixa lista[],int tam, int inicio, int *visita){
     }while (pri != 1);
 }
 
-void Temp (caixa lista[],int tam,int inicio,int*visita){
+void Cor (caixa lista[],int tam,int inicio,int*visita){
     
     visita[inicio]=1;
     
@@ -479,10 +475,11 @@ void Temp (caixa lista[],int tam,int inicio,int*visita){
     for(int i=0; i<tam; i++){
         while(aux!=NULL){
             if(!visita)
-                Temp(lista,tam,aux->A1.num,visita);
+                Cor(lista,tam,aux->A1.num,visita);
             aux=aux->Ligamento;
         }
     }
+    visita[inicio]=inicio+1;
     printf("%d ",inicio+1);
 }
 
@@ -491,10 +488,70 @@ void Topologica (caixa lista[], int tam, int *visita){
         visita[i] = 0;
     }
     for (int i = 0; i < tam; i++){
-        Temp (lista,tam,i,visita);
+        Cor (lista,tam,i,visita);
+    }
+
+
+}
+
+
+void GLista(caixa lista[],int ligamentos,ligandolista *LL){
+    
+    int j,i,p;
+    
+    //criar a LISTA
+    for(int k=0; k<ligamentos; k++){
+
+        
+        i=LL[k].B;i-=1;
+        j=LL[k].A;j-=1;
+        p=LL[k].Peso;p-=1;
+            
+        //coloca os valores iniciais ddo blococomo tendo coisa para a lista
+        caixa l=(caixa)malloc(sizeof(caixa));
+        l->A1.num=j;
+        l->A1.peso=p;
+        l->Ligamento=NULL;
+        lista[i]=ADD(lista[i],l);
+
     }
 }
 
+
+void FortLigado(caixa Gt[],int tam,int*visita,int*visita2){
+    
+    int cont=1;
+    //int *ban=(int*)calloc(tam,sizeof(int));
+    
+    for(int i=0; i<tam; i++)
+    {
+        cont=1;
+
+        for(int i=0; i<tam; i++)
+            visita2[i]=0;
+
+        For(Gt,tam,visita[i],visita2,cont);
+        
+        printf("\n\n");
+
+    }
+}
+
+void For(caixa lista[],int tam,int inicio,int*visita,int cont){
+    
+    visita[inicio]=cont;
+    printf("%d ",inicio+1);
+    
+    caixa aux=(caixa)malloc(sizeof(caixa));
+    aux=lista[inicio];
+
+    while(aux!=NULL){
+        //cont++;
+        if(!visita[aux->A1.num])
+            For(lista,tam,aux->A1.num,visita,cont);
+        aux=aux->Ligamento;
+    }
+}
 /*
 #include <stdio.h>
 #include <stdlib.h>
